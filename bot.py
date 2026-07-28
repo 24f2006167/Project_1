@@ -16,7 +16,7 @@ AIPIPE_TOKEN = os.environ.get("AIPIPE_TOKEN", "eyJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 BASE_URL = os.environ.get("OPENAI_BASE_URL", "https://aipipe.org/openai/v1" if not OPENAI_API_KEY else "https://api.openai.com/v1")
 API_KEY = OPENAI_API_KEY if OPENAI_API_KEY else AIPIPE_TOKEN
-LOG_URL = os.environ.get("LOG_URL", "https://raw.githubusercontent.com/shitanshuchaurasiya/TDS_ga5/main/run.jsonl")
+LOG_URL = os.environ.get("LOG_URL", "https://raw.githubusercontent.com/24f2006167/Project_1/main/run.jsonl")
 
 LOG_FILE = "run.jsonl"
 
