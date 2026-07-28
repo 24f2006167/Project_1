@@ -16,9 +16,30 @@ AIPIPE_TOKEN = os.environ.get("AIPIPE_TOKEN", "eyJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 BASE_URL = os.environ.get("OPENAI_BASE_URL", "https://aipipe.org/openai/v1" if not OPENAI_API_KEY else "https://api.openai.com/v1")
 API_KEY = OPENAI_API_KEY if OPENAI_API_KEY else AIPIPE_TOKEN
-LOG_URL = os.environ.get("LOG_URL", "https://raw.githubusercontent.com/24f2006167/Project_1/main/run.jsonl")
+import threading
+from http.server import HTTPServer, BaseHTTPRequestHandler
 
+LOG_URL = os.environ.get("LOG_URL", "https://raw.githubusercontent.com/24f2006167/Project_1/main/run.jsonl")
 LOG_FILE = "run.jsonl"
+
+def start_health_server():
+    """Start a lightweight HTTP server on $PORT for Render Free Tier Web Service."""
+    port = int(os.environ.get("PORT", 8080))
+    class HealthHandler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            self.send_response(200)
+            self.send_header("Content-type", "application/json")
+            self.end_headers()
+            self.wfile.write(b'{"status": "ok", "bot": "Data Analyst Telegram Bot"}')
+        def log_message(self, format, *args):
+            pass
+
+    try:
+        server = HTTPServer(("0.0.0.0", port), HealthHandler)
+        print(f"Health check HTTP server listening on port {port}")
+        server.serve_forever()
+    except Exception as e:
+        print(f"Health server error: {e}")
 
 # Initialize OpenAI / AIPipe client
 client = OpenAI(base_url=BASE_URL, api_key=API_KEY)
@@ -205,6 +226,9 @@ def main():
         print("WARNING: TELEGRAM_BOT_TOKEN environment variable is not set!")
         print("Please set TELEGRAM_BOT_TOKEN before running the bot.")
 
+    # Start background health server for Render Web Service Free Tier
+    threading.Thread(target=start_health_server, daemon=True).start()
+
     print(f"Initializing Data Analyst Telegram Bot (Log URL: {LOG_URL})...")
     app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
     
@@ -217,4 +241,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
