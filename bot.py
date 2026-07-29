@@ -31,6 +31,15 @@ def start_health_server():
             self.send_header("Content-type", "application/json")
             self.end_headers()
             self.wfile.write(b'{"status": "ok", "bot": "Data Analyst Telegram Bot"}')
+        def do_HEAD(self):
+            self.send_response(200)
+            self.send_header("Content-type", "application/json")
+            self.end_headers()
+        def do_POST(self):
+            self.send_response(200)
+            self.send_header("Content-type", "application/json")
+            self.end_headers()
+            self.wfile.write(b'{"status": "ok", "bot": "Data Analyst Telegram Bot"}')
         def log_message(self, format, *args):
             pass
 
