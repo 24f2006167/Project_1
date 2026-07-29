@@ -41,6 +41,26 @@ def start_health_server():
     except Exception as e:
         print(f"Health server error: {e}")
 
+import urllib.request
+
+def start_self_pinger():
+    """Periodically ping external URL to keep free-tier web services like Render awake."""
+    ping_url = os.environ.get("RENDER_EXTERNAL_URL") or os.environ.get("SELF_PING_URL")
+    if not ping_url:
+        return
+    print(f"Starting self-pinger for {ping_url} (interval: 10 mins)")
+    def pinger():
+        while True:
+            time.sleep(600)
+            try:
+                urllib.request.urlopen(ping_url, timeout=10)
+                print(f"Self-ping successful to {ping_url}")
+            except Exception as e:
+                print(f"Self-ping failed: {e}")
+
+    threading.Thread(target=pinger, daemon=True).start()
+
+
 # Initialize OpenAI / AIPipe client
 client = OpenAI(base_url=BASE_URL, api_key=API_KEY)
 
@@ -324,6 +344,7 @@ def main():
 
     # Start background health server for Render Web Service Free Tier
     threading.Thread(target=start_health_server, daemon=True).start()
+    start_self_pinger()
 
     print(f"Initializing Data Analyst Telegram Bot (Log URL: {LOG_URL})...")
     app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
