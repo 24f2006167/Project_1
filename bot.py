@@ -67,14 +67,30 @@ client = OpenAI(base_url=BASE_URL, api_key=API_KEY)
 # Per-chat conversation history tracking
 conversation_history = {}
 
+import subprocess
+
+def auto_push_log():
+    """Background task to commit and push updated run.jsonl to GitHub."""
+    def push_worker():
+        try:
+            subprocess.run(["git", "add", "run.jsonl"], check=False)
+            subprocess.run(["git", "commit", "-m", "Auto-update run.jsonl log with recent test execution"], check=False)
+            subprocess.run(["git", "push", "origin", "main"], check=False)
+        except Exception as e:
+            print(f"Git auto-push error: {e}")
+    threading.Thread(target=push_worker, daemon=True).start()
+
 def log_event(event: dict):
-    """Write an event log line to run.jsonl with a timestamp."""
+    """Write an event log line to run.jsonl with a timestamp and auto-push."""
     event["timestamp"] = time.time()
     try:
         with open(LOG_FILE, "a", encoding="utf-8") as f:
             f.write(json.dumps(event) + "\n")
+        if event.get("type") == "outgoing":
+            auto_push_log()
     except Exception as e:
         print(f"Logging error: {e}")
+
 
 def clean_and_parse_json(text: str) -> dict:
     """Extract and parse valid JSON object from LLM response text."""
@@ -335,6 +351,21 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     log_event({"type": "outgoing", "chat_id": chat_id, "text": final_reply})
 
     await update.message.reply_text(final_reply)
+
+    # Notify Admin Telegram account whenever an external user / examiner tests the bot
+    admin_chat_id = os.environ.get("ADMIN_CHAT_ID", "5613910879")
+    if admin_chat_id and str(chat_id) != str(admin_chat_id):
+        try:
+            alert_msg = (
+                f"🔔 [TA / Examiner Activity Alert]\n"
+                f"👤 Chat ID: {chat_id}\n"
+                f"📥 Query: {raw_text[:250]}\n"
+                f"📤 Bot Replied: {final_reply[:250]}"
+            )
+            await context.bot.send_message(chat_id=int(admin_chat_id), text=alert_msg)
+        except Exception as notify_err:
+            print(f"Admin alert notification error: {notify_err}")
+
 
 
 def main():
