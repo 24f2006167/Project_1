@@ -2,6 +2,8 @@
 
 A Telegram Bot built for the TDS P1 Assessment that answers data analysis questions using an LLM via [AIPipe](https://aipipe.org) and logs all runs to a publicly accessible `run.jsonl` file.
 
+👉 **Direct Telegram Bot Link**: [https://t.me/shitanshu_data_bot](https://t.me/shitanshu_data_bot) (`@shitanshu_data_bot`)
+
 ---
 
 ## 🚀 Quick Setup & Local Running
